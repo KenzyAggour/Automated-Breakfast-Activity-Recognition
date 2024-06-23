@@ -5,7 +5,7 @@ from skimage.transform import resize, pyramid_reduce
 
 import numpy as np
 import os
-import argparse
+import shutil
 
 """
 NOTES:
@@ -37,44 +37,56 @@ def video_frames_writer(video_dir, video_name, writer_type, crop_and_resize_imag
     for frame in container.decode(video=0):
         if frame.index % 100 == 0:
             
-            print("processed frame index {}".format(frame.index))
+            # print("processed frame index {}".format(frame.index))
 
-        img_pil = frame.to_image()
-        width, height = img_pil.size  # width, height for this read PIL image
+            img_pil = frame.to_image()
+            width, height = img_pil.size  # width, height for this read PIL image
 
-        if writer_type == 0:
-            if crop_and_resize_image:
-                # 0 crop and resize using PIL
-                img_pil_cropped = img_pil.crop((240, 0, width - 240, height))  # (x0, y0, x1, y1)
-                resize_width = 320
-                ratio = resize_width / float(img_pil_cropped.size[0])
-                resize_height = int(float(img_pil_cropped.size[1]) * float(ratio))
-                img_pil_down = img_pil_cropped.resize((resize_width, resize_height), PIL.Image.ANTIALIAS)
-                img_pil_down.save(os.path.join(sv_dir, video_name.split('.')[0]) + '_frame_%05d.jpg' % frame.index)
-            else:
-                img_pil.save(os.path.join(sv_dir, video_name.split('.')[0]) + '_frame_%05d.jpg' % frame.index)
+            if writer_type == 0:
+                if crop_and_resize_image:
+                    # 0 crop and resize using PIL
+                    img_pil_cropped = img_pil.crop((240, 0, width - 240, height))  # (x0, y0, x1, y1)
+                    resize_width = 320
+                    ratio = resize_width / float(img_pil_cropped.size[0])
+                    resize_height = int(float(img_pil_cropped.size[1]) * float(ratio))
+                    img_pil_down = img_pil_cropped.resize((resize_width, resize_height), PIL.Image.ANTIALIAS)
+                    img_pil_down.save(os.path.join(sv_dir, video_name.split('.')[0]) + '_frame_%05d.jpg' % frame.index)
+                else:
+                    img_pil.save(os.path.join(sv_dir, video_name.split('.')[0]) + '_frame_%05d.jpg' % frame.index)
 
-        elif writer_type == 1:
-            img_arr = np.asarray(img_pil)  # converting PIL (<class 'PIL.Image.Image'>) to (<class 'numpy.ndarray'>)
-            h, w, c = img_arr.shape  # h, w, c for skimage
-            # this is exact same as when you read a .jpg image using skimage.io.imread (h, w, c)
+            elif writer_type == 1:
+                img_arr = np.asarray(img_pil)  # converting PIL (<class 'PIL.Image.Image'>) to (<class 'numpy.ndarray'>)
+                h, w, c = img_arr.shape  # h, w, c for skimage
+                # this is exact same as when you read a .jpg image using skimage.io.imread (h, w, c)
 
-            if crop_and_resize_image:
-                # 1 crop and resize using skimage.io
-                print(h,w)
-                img_sk_cropped = img_arr[0:h, 240:w-240]  # x0:x1,y0:y1
-                img_sk_down = pyramid_reduce(img_sk_cropped, downscale=4.5)
-                skimage.io.imsave(os.path.join(sv_dir, video_name.split('.')[0]) + '_frame_%05d.jpg' % frame.index,
-                                  img_sk_down)
-            else:
-                skimage.io.imsave(os.path.join(sv_dir, video_name.split('.')[0]) + '_frame_%05d.jpg' % frame.index,
-                                  img_arr)
+                if crop_and_resize_image:
+                    # 1 crop and resize using skimage.io
+                    print(h,w)
+                    img_sk_cropped = img_arr[0:h, 240:w-240]  # x0:x1,y0:y1
+                    img_sk_down = pyramid_reduce(img_sk_cropped, downscale=4.5)
+                    skimage.io.imsave(os.path.join(sv_dir, video_name.split('.')[0]) + '_frame_%05d.jpg' % frame.index,
+                                    img_sk_down)
+                else:
+                    skimage.io.imsave(os.path.join(sv_dir, video_name.split('.')[0]) + '_frame_%05d.jpg' % frame.index,
+                                    img_arr)
 
     # container.close()
     print("Processed the video {} and wrote individual frames to folder {}".format(video_name, save_dir))
 
 
-if __name__ == "__main__":
+def execute_v2f(data_dir:str, result_dir:str):
+    if not os.path.exists(result_dir):
+        os.makedirs(result_dir)
+    else:
+        shutil.rmtree(result_dir)
+        print(f"Folder {result_dir} already exists, deleting folder")
+        os.makedirs(result_dir)
+    for person in os.listdir(data_dir):
+        for video in os.listdir(os.path.join(data_dir,person)):
+            video_frames_writer(os.path.join(data_dir,person), video, 0, False,result_dir)
+
+
+# if __name__ == "__main__":
 
     # parser = argparse.ArgumentParser(description="A script to read the given video using PyAV and write its individual "
     #                                              "frames using PIL or skimage.")
@@ -86,23 +98,24 @@ if __name__ == "__main__":
     # parser.add_argument('-c', '--crop_and_resize', help='crop and resize video frames while writing? (demonstrated with'
     #                                                     ' an example crop size)', action="store_true", default=False)
     # args = parser.parse_args()
-    target='valid'
-    root_dir=f"..\Breakfast Action Recognition\\{target}"
+    # target='valid'
+    # root_dir=f"..\Breakfast Action Recognition\\{target}"
     
-    if not os.path.exists(os.path.join('..','data',target)):
-        os.mkdir(os.path.join('..','data',target))
-    path=os.path.join('..','data',target)
-    save_dir = path
-    for person in os.listdir(root_dir):
-        for video in os.listdir(os.path.join(root_dir,person)):
-            video_frames_writer(os.path.join(root_dir,person), video, 0, False,save_dir)
-    target='train'
-    root_dir=f"..\Breakfast Action Recognition\\{target}"
+    # if not os.path.exists(os.path.join('..','data',target)):
+    #     os.mkdir(os.path.join('..','data',target))
+    # path=os.path.join('..','data',target)
+    # save_dir = path
+    # for person in os.listdir(root_dir):
+    #     for video in os.listdir(os.path.join(root_dir,person)):
+    #         video_frames_writer(os.path.join(root_dir,person), video, 0, False,save_dir)
+
+    # target='train'
+    # root_dir=f"..\Breakfast Action Recognition\\{target}"
     
-    if not os.path.exists(os.path.join('..','data',target)):
-        os.mkdir(os.path.join('..','data',target))
-    path=os.path.join('..','data',target)
-    save_dir = path
-    for person in os.listdir(root_dir):
-        for video in os.listdir(os.path.join(root_dir,person)):
-            video_frames_writer(os.path.join(root_dir,person), video, 0, False,save_dir)
+    # if not os.path.exists(os.path.join('..','data',target)):
+    #     os.mkdir(os.path.join('..','data',target))
+    # path=os.path.join('..','data',target)
+    # save_dir = path
+    # for person in os.listdir(root_dir):
+    #     for video in os.listdir(os.path.join(root_dir,person)):
+    #         video_frames_writer(os.path.join(root_dir,person), video, 0, False,save_dir)
