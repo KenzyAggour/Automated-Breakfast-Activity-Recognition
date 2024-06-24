@@ -15,7 +15,7 @@ your requirements.
 """
 
 
-def video_frames_writer(video_dir, video_name, writer_type, crop_and_resize_image,sv_dir=None):
+def video_frames_writer(video_dir, video_name, writer_type, crop_and_resize_image,sv_dir=None, frames_to_get=10):
     """
     Writes a (height, width, 3) shaped image in a subdirectory named after the video's name in the video_dir.
     :param video_dir: directory where the video is located
@@ -34,8 +34,12 @@ def video_frames_writer(video_dir, video_name, writer_type, crop_and_resize_imag
         print(f"Folder {sv_dir} already exists")
         return
     container = av.open(os.path.join(video_dir , video_name), metadata_errors='ignore')
+    num_frames_in_video = sum(1 for _ in container.decode(video=0))
+    print(f"Total frames in video: {num_frames_in_video}")
+    mapping = np.linspace(0, num_frames_in_video, frames_to_get, endpoint=False, dtype=int)
+    container = av.open(os.path.join(video_dir , video_name), metadata_errors='ignore')
     for frame in container.decode(video=0):
-        if frame.index % 100 == 0:
+        if frame.index in mapping:
             
             # print("processed frame index {}".format(frame.index))
 
@@ -74,7 +78,7 @@ def video_frames_writer(video_dir, video_name, writer_type, crop_and_resize_imag
     print("Processed the video {} and wrote individual frames to folder {}".format(video_name, save_dir))
 
 
-def execute_v2f(data_dir:str, result_dir:str):
+def execute_v2f(data_dir:str, result_dir:str, frames_to_get=10):
     if not os.path.exists(result_dir):
         os.makedirs(result_dir)
     else:
@@ -83,7 +87,7 @@ def execute_v2f(data_dir:str, result_dir:str):
         os.makedirs(result_dir)
     for person in os.listdir(data_dir):
         for video in os.listdir(os.path.join(data_dir,person)):
-            video_frames_writer(os.path.join(data_dir,person), video, 0, False,result_dir)
+            video_frames_writer(os.path.join(data_dir,person), video, 0, False,result_dir,frames_to_get)
 
 
 # if __name__ == "__main__":
