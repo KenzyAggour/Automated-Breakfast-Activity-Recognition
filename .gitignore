@@ -4,3 +4,4 @@ BreakfastActivityRecognition.zip
 data
 *.jpg
 *.txt
+__pycache__
