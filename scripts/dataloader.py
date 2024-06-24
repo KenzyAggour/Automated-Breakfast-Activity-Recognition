@@ -51,6 +51,7 @@ class BreakfastActionsDataset(Dataset):
 # Transformations
 transform = transforms.Compose([
     transforms.Resize((64, 64)),
+    # TODO::
     transforms.RandomCrop((64, 64)),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor()

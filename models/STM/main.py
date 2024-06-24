@@ -10,7 +10,7 @@ sys.path.append('..\..\scripts')
 from dataloader import create_data_loader
 
 
-sequence_length = 5
+sequence_length = 100
 num_classes = 10  
 cnn = CNN()
 model = CNN_LSTM(cnn, num_classes, sequence_length)
@@ -19,7 +19,7 @@ model = CNN_LSTM(cnn, num_classes, sequence_length)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-num_epochs = 20
+num_epochs = 10
 train_loader = create_data_loader('..\..\data\\train', batch_size=10, shuffle=False)
 
 val_loader = create_data_loader('..\\..\\data\\valid', batch_size=10, shuffle=False)

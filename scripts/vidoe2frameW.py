@@ -39,7 +39,7 @@ def video_frames_writer(video_dir, video_name, writer_type, crop_and_resize_imag
     mapping = np.linspace(0, num_frames_in_video, frames_to_get, endpoint=False, dtype=int)
     container = av.open(os.path.join(video_dir , video_name), metadata_errors='ignore')
     for frame in container.decode(video=0):
-        if frame.index in mapping:
+        if frame.index % 100 == 0:
             
             # print("processed frame index {}".format(frame.index))
 
